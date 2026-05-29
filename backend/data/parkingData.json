@@ -1,0 +1,186 @@
+{
+  "activeParkings": [],
+  "history": [],
+  "spots": [
+    {
+      "id": 1,
+      "number": 1,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 2,
+      "number": 2,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 3,
+      "number": 3,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 4,
+      "number": 4,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 5,
+      "number": 5,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 6,
+      "number": 6,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 7,
+      "number": 7,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 8,
+      "number": 8,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 9,
+      "number": 9,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 10,
+      "number": 10,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 11,
+      "number": 11,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 12,
+      "number": 12,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 13,
+      "number": 13,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 14,
+      "number": 14,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 15,
+      "number": 15,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 16,
+      "number": 16,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 17,
+      "number": 17,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 18,
+      "number": 18,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 19,
+      "number": 19,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 20,
+      "number": 20,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 21,
+      "number": 21,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 22,
+      "number": 22,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 23,
+      "number": 23,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 24,
+      "number": 24,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 25,
+      "number": 25,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 26,
+      "number": 26,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 27,
+      "number": 27,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 28,
+      "number": 28,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 29,
+      "number": 29,
+      "isOccupied": false,
+      "currentVehicle": null
+    },
+    {
+      "id": 30,
+      "number": 30,
+      "isOccupied": false,
+      "currentVehicle": null
+    }
+  ]
+}

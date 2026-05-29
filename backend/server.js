@@ -1,0 +1,212 @@
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
+
+const app = express();
+const PORT = 3000;
+const SECRET_KEY = 'parking-app-secret-2024';
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// Configurar caminho do arquivo de dados
+const DATA_FILE = path.join(__dirname, 'data', 'parkingData.json');
+
+console.log('📁 Arquivo de dados:', DATA_FILE);
+
+// Inicializar arquivo de dados se não existir
+if (!fs.existsSync(DATA_FILE)) {
+  console.log('📝 Criando arquivo de dados inicial...');
+  const initialData = {
+    activeParkings: [],
+    history: [],
+    spots: Array.from({ length: 30 }, (_, i) => ({
+      id: i + 1,
+      number: i + 1,
+      isOccupied: false,
+      currentVehicle: null
+    }))
+  };
+  fs.writeFileSync(DATA_FILE, JSON.stringify(initialData, null, 2));
+  console.log('✅ Arquivo de dados criado com 30 vagas!');
+}
+
+// Funções auxiliares
+const readData = () => {
+  const data = fs.readFileSync(DATA_FILE, 'utf8');
+  return JSON.parse(data);
+};
+
+const writeData = (data) => {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+};
+
+// Middleware de autenticação
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token não fornecido' });
+  }
+
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Token inválido' });
+    req.user = user;
+    next();
+  });
+};
+
+// ========== ROTAS DA API ==========
+
+// Rota de login (gera token)
+app.post('/api/login', (req, res) => {
+  console.log('🔐 Login solicitado');
+  const token = jwt.sign({ user: 'parking-admin' }, SECRET_KEY, { expiresIn: '24h' });
+  res.json({ token });
+});
+
+// Rota para testar se o servidor está rodando
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Servidor rodando!' });
+});
+
+// Obter todos os estacionamentos ativos
+app.get('/api/active-parkings', authenticateToken, (req, res) => {
+  console.log('📋 Buscando estacionamentos ativos');
+  const data = readData();
+  res.json(data.activeParkings);
+});
+
+// Obter todas as vagas
+app.get('/api/spots', authenticateToken, (req, res) => {
+  console.log('🗺️ Buscando informações das vagas');
+  const data = readData();
+  res.json(data.spots);
+});
+
+// Registrar entrada
+app.post('/api/entry', authenticateToken, (req, res) => {
+  console.log('🚗 Registrando nova entrada');
+  const data = readData();
+  const { spotNumber, customerName, plate, carColor, brand, photo } = req.body;
+  
+  // Validar se a vaga existe
+  const spot = data.spots.find(s => s.number === parseInt(spotNumber));
+  if (!spot) {
+    return res.status(400).json({ error: 'Vaga não encontrada' });
+  }
+  
+  if (spot.isOccupied) {
+    return res.status(400).json({ error: 'Vaga já está ocupada' });
+  }
+
+  // Criar novo registro
+  const newParking = {
+    id: Date.now(),
+    spotNumber: parseInt(spotNumber),
+    plate: plate.toUpperCase(),
+    customerName,
+    carColor,
+    brand,
+    photo: photo || null,
+    entryTime: new Date().toISOString(),
+    status: 'active'
+  };
+
+  data.activeParkings.push(newParking);
+  spot.isOccupied = true;
+  spot.currentVehicle = newParking;
+  
+  writeData(data);
+  console.log(`✅ Entrada registrada: ${plate} na vaga ${spotNumber}`);
+  res.status(201).json(newParking);
+});
+
+// Registrar saída
+app.post('/api/exit/:id', authenticateToken, (req, res) => {
+  console.log('🚪 Registrando saída');
+  const data = readData();
+  const parkingId = parseInt(req.params.id);
+  
+  const parkingIndex = data.activeParkings.findIndex(p => p.id === parkingId);
+  if (parkingIndex === -1) {
+    return res.status(404).json({ error: 'Estacionamento não encontrado' });
+  }
+const parking = data.activeParkings[parkingIndex];
+  const entryDate = new Date(parking.entryTime);
+  const exitDate = new Date();
+  const diffHours = (exitDate - entryDate) / (1000 * 60 * 60);
+  const hours = Math.ceil(diffHours);
+  
+  // Calcular valor (R$5 por hora ou R$50 diária)
+  let amount;
+  if (hours >= 24) {
+    const days = Math.ceil(hours / 24);
+    amount = days * 50;
+  } else {
+    amount = hours * 5;
+  }
+
+  const completedParking = {
+    ...parking,
+    exitTime: exitDate.toISOString(),
+    hoursParked: hours,
+    amount,
+    status: 'completed'
+  };
+
+  // Mover para histórico
+  data.history.unshift(completedParking);
+  
+  // Remover dos ativos
+  data.activeParkings.splice(parkingIndex, 1);
+  
+  // Liberar vaga
+  const spot = data.spots.find(s => s.number === parking.spotNumber);
+  if (spot) {
+    spot.isOccupied = false;
+    spot.currentVehicle = null;
+  }
+  
+  writeData(data);
+  console.log(`✅ Saída registrada: ${parking.plate} - Total: R$ ${amount}`);
+  res.json(completedParking);
+});
+
+// Obter histórico completo
+app.get('/api/history', authenticateToken, (req, res) => {
+  console.log('📜 Buscando histórico completo');
+  const data = readData();
+  res.json(data.history);
+});
+
+// Obter comprovante específico
+app.get('/api/receipt/:id', authenticateToken, (req, res) => {
+  console.log('🧾 Buscando comprovante');
+  const data = readData();
+  const id = parseInt(req.params.id);
+  const parking = data.history.find(p => p.id === id);
+  
+  if (!parking) {
+    return res.status(404).json({ error: 'Registro não encontrado' });
+  }
+  
+  res.json(parking);
+});
+
+// Iniciar servidor
+app.listen(PORT, () => {
+  console.log(`
+  ════════════════════════════════════════
+  ✅ Servidor do Estacionamento rodando!
+  ════════════════════════════════════════
+  📡 URL: http://localhost:${PORT}
+  🅿️  API de Estacionamento
+  📁 Dados salvos em: ${DATA_FILE}
+  ════════════════════════════════════════
+  `);
+});
