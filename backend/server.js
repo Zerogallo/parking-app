@@ -11,11 +11,17 @@ const SECRET_KEY = 'parking-app-secret-2024';
 // Middlewares
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Configurar caminho do arquivo de dados
 const DATA_FILE = path.join(__dirname, 'data', 'parkingData.json');
 
 console.log('📁 Arquivo de dados:', DATA_FILE);
+
+// Garantir que a pasta data existe
+if (!fs.existsSync(path.join(__dirname, 'data'))) {
+  fs.mkdirSync(path.join(__dirname, 'data'));
+}
 
 // Inicializar arquivo de dados se não existir
 if (!fs.existsSync(DATA_FILE)) {
@@ -62,16 +68,23 @@ const authenticateToken = (req, res, next) => {
 
 // ========== ROTAS DA API ==========
 
-// Rota de login (gera token)
+// Rota de login (gera token) - CORRIGIDA
 app.post('/api/login', (req, res) => {
   console.log('🔐 Login solicitado');
+  console.log('📦 Body recebido:', req.body);
+  
+  // Sempre retorna token, mesmo sem dados
   const token = jwt.sign({ user: 'parking-admin' }, SECRET_KEY, { expiresIn: '24h' });
-  res.json({ token });
+  res.json({ 
+    success: true,
+    token: token,
+    message: 'Login realizado com sucesso'
+  });
 });
 
 // Rota para testar se o servidor está rodando
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Servidor rodando!' });
+  res.json({ status: 'OK', message: 'Servidor rodando!', timestamp: new Date().toISOString() });
 });
 
 // Obter todos os estacionamentos ativos
@@ -91,8 +104,15 @@ app.get('/api/spots', authenticateToken, (req, res) => {
 // Registrar entrada
 app.post('/api/entry', authenticateToken, (req, res) => {
   console.log('🚗 Registrando nova entrada');
+  console.log('📦 Dados recebidos:', req.body);
+  
   const data = readData();
   const { spotNumber, customerName, plate, carColor, brand, photo } = req.body;
+  
+  // Validar campos obrigatórios
+  if (!spotNumber || !customerName || !plate || !carColor || !brand) {
+    return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+  }
   
   // Validar se a vaga existe
   const spot = data.spots.find(s => s.number === parseInt(spotNumber));
@@ -116,7 +136,6 @@ app.post('/api/entry', authenticateToken, (req, res) => {
     entryTime: new Date().toISOString(),
     status: 'active'
   };
-
   data.activeParkings.push(newParking);
   spot.isOccupied = true;
   spot.currentVehicle = newParking;
@@ -136,7 +155,8 @@ app.post('/api/exit/:id', authenticateToken, (req, res) => {
   if (parkingIndex === -1) {
     return res.status(404).json({ error: 'Estacionamento não encontrado' });
   }
-const parking = data.activeParkings[parkingIndex];
+  
+  const parking = data.activeParkings[parkingIndex];
   const entryDate = new Date(parking.entryTime);
   const exitDate = new Date();
   const diffHours = (exitDate - entryDate) / (1000 * 60 * 60);
@@ -199,12 +219,13 @@ app.get('/api/receipt/:id', authenticateToken, (req, res) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`
   ════════════════════════════════════════
   ✅ Servidor do Estacionamento rodando!
   ════════════════════════════════════════
-  📡 URL: http://localhost:${PORT}
+  📡 Local: http://localhost:${PORT}
+  📡 Rede: http://192.168.1.68:${PORT}
   🅿️  API de Estacionamento
   📁 Dados salvos em: ${DATA_FILE}
   ════════════════════════════════════════
