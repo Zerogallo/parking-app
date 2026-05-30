@@ -10,21 +10,27 @@ import {
   ScrollView,
   Alert,
   Image,
-  RefreshControl
+  RefreshControl,
+  ActivityIndicator
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { Vehicle } from '../types';
+import { Vehicle, ParkingSpot } from '../types';
 import ParkingService from '../services/ParkingService';
 import CheckoutScreen from './CheckoutScreen';
 
 const HomeScreen = () => {
   const [activeParkings, setActiveParkings] = useState<Vehicle[]>([]);
   const [recentHistory, setRecentHistory] = useState<Vehicle[]>([]);
+  const [spots, setSpots] = useState<ParkingSpot[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [checkoutVisible, setCheckoutVisible] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [checkingSpot, setCheckingSpot] = useState(false);
+  const [spotAvailable, setSpotAvailable] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(false);
+  
   const [formData, setFormData] = useState({
     spotNumber: '',
     customerName: '',
@@ -36,32 +42,46 @@ const HomeScreen = () => {
 
   useEffect(() => {
     loadData();
+    loadSpots();
+    
+    // Atualizar a cada 5 segundos para manter sincronizado
     const interval = setInterval(() => {
-      updateRealtimeValues();
-    }, 60000);
+      loadData();
+      loadSpots();
+    }, 5000);
+    
     return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
     try {
+      console.log('🔄 Carregando dados...');
       const active = await ParkingService.getActiveParkings();
       const history = await ParkingService.getHistory();
+      
       setActiveParkings(active);
       setRecentHistory(history.slice(0, 5));
+      
+      console.log(`✅ Carregados: ${active.length} veículos ativos`);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      Alert.alert('Erro', 'Não foi possível carregar os dados');
+    }
+  };
+
+  const loadSpots = async () => {
+    try {
+      const spotsData = await ParkingService.getSpots();
+      setSpots(spotsData);
+    } catch (error) {
+      console.error('Erro ao carregar vagas:', error);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
+    await loadSpots();
     setRefreshing(false);
-  };
-
-  const updateRealtimeValues = () => {
-    setActiveParkings([...activeParkings]);
   };
 
   const calculateCurrentValue = (entryTime: string) => {
@@ -84,7 +104,48 @@ const HomeScreen = () => {
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-    return `${hours}h ${minutes}m ${seconds}s`;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const checkSpotAvailability = async (spotNumber: string) => {
+    if (!spotNumber || spotNumber === '') {
+      setSpotAvailable(null);
+      return;
+    }
+
+    setCheckingSpot(true);
+    try {
+      const spotsData = await ParkingService.getSpots();
+      setSpots(spotsData);
+      
+      const spot = spotsData.find(s => s.number === parseInt(spotNumber));
+      
+      if (!spot) {
+        setSpotAvailable(false);
+      } else {
+        setSpotAvailable(!spot.isOccupied);
+      }
+    } catch (error) {
+      setSpotAvailable(false);
+    } finally {
+      setCheckingSpot(false);
+    }
+  };
+
+  const handleSpotNumberChange = (text: string) => {
+    setFormData({ ...formData, spotNumber: text });
+    
+    if (!text || text === '') {
+      setSpotAvailable(null);
+      return;
+    }
+    
+    // Verificar após 500ms
+    const timeoutId = setTimeout(() => {
+      checkSpotAvailability(text);
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
   };
 
   const handleEntry = async () => {
@@ -93,14 +154,49 @@ const HomeScreen = () => {
       return;
     }
 
+    // Verificar se a vaga ainda está disponível
+    const spot = spots.find(s => s.number === parseInt(formData.spotNumber));
+    if (!spot) {
+      Alert.alert('Erro', 'Vaga não encontrada');
+      return;
+    }
+    
+    if (spot.isOccupied) {
+      Alert.alert('Erro', 'Esta vaga já está ocupada');
+      return;
+    }
+
+    setLoading(true);
     const result = await ParkingService.registerEntry(formData);
+    setLoading(false);
+    
     if (result.success) {
       Alert.alert('Sucesso', 'Entrada registrada com sucesso!');
       setModalVisible(false);
       setFormData({ spotNumber: '', customerName: '', plate: '', carColor: '', brand: '', photo: '' });
-      loadData();
+      setSpotAvailable(null);
+      await loadData();
+      await loadSpots();
     } else {
       Alert.alert('Erro', result.error);
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Precisamos de acesso à câmera para tirar foto');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      setFormData({ ...formData, photo: result.assets[0].uri });
     }
   };
 
@@ -177,6 +273,9 @@ const HomeScreen = () => {
             <View style={styles.emptyContainer}>
               <Ionicons name="car-outline" size={60} color="#ccc" />
               <Text style={styles.emptyText}>Nenhum veículo estacionado</Text>
+              <Text style={styles.emptySubtext}>
+                Toque no botão + para registrar entrada
+              </Text>
             </View>
           ) : (
             activeParkings.map(parking => (
@@ -214,20 +313,43 @@ const HomeScreen = () => {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false);
+          setSpotAvailable(null);
+          setFormData({ spotNumber: '', customerName: '', plate: '', carColor: '', brand: '', photo: '' });
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Registrar Entrada</Text>
             
             <ScrollView showsVerticalScrollIndicator={false}>
-              <TextInput
-                style={styles.input}
-                placeholder="Número da Vaga *"
-                keyboardType="numeric"
-                value={formData.spotNumber}
-                onChangeText={(text) => setFormData({ ...formData, spotNumber: text })}
-              />
+              {/* Campo Número da Vaga */}
+              <View>
+                <TextInput
+                  style={[
+                    styles.input,
+                    spotAvailable === false && styles.inputError,
+                    spotAvailable === true && styles.inputSuccess
+                  ]}
+                  placeholder="Número da Vaga * (1-30)"
+                  keyboardType="numeric"
+                  value={formData.spotNumber}
+                  onChangeText={handleSpotNumberChange}
+                />
+                {checkingSpot && (
+                  <View style={styles.checkingContainer}>
+                    <ActivityIndicator size="small" color="#007AFF" />
+                    <Text style={styles.checkingText}>Verificando vaga...</Text>
+                  </View>
+                )}
+                {spotAvailable === true && !checkingSpot && (
+                  <Text style={styles.availableText}>✅ Vaga disponível!</Text>
+                )}
+                {spotAvailable === false && !checkingSpot && (
+                  <Text style={styles.unavailableText}>❌ Vaga ocupada ou inválida</Text>
+                )}
+              </View>
               
               <TextInput
                 style={styles.input}
@@ -258,30 +380,57 @@ const HomeScreen = () => {
                 onChangeText={(text) => setFormData({ ...formData, brand: text })}
               />
               
-              <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
-                <Ionicons name="camera" size={24} color="#007AFF" />
-                <Text style={styles.imageButtonText}>
-                  {formData.photo ? 'Alterar Foto' : 'Adicionar Foto'}
-                </Text>
-              </TouchableOpacity>
+              {/* Botões de Foto */}
+              <View style={styles.photoButtonsContainer}>
+                <TouchableOpacity style={styles.photoButton} onPress={takePhoto}>
+                  <Ionicons name="camera" size={24} color="#007AFF" />
+                  <Text style={styles.photoButtonText}>Tirar Foto</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
+                  <Ionicons name="images" size={24} color="#007AFF" />
+                  <Text style={styles.photoButtonText}>Galeria</Text>
+                </TouchableOpacity>
+              </View>
               
               {formData.photo ? (
-                <Image source={{ uri: formData.photo }} style={styles.previewImage} />
+                <View style={styles.photoPreviewContainer}>
+                  <Image source={{ uri: formData.photo }} style={styles.previewImage} />
+                  <TouchableOpacity 
+                    style={styles.removePhotoButton}
+                    onPress={() => setFormData({ ...formData, photo: '' })}
+                  >
+                    <Ionicons name="close-circle" size={24} color="#f44336" />
+                  </TouchableOpacity>
+                </View>
               ) : null}
 
               <View style={styles.modalButtons}>
                 <TouchableOpacity
                   style={[styles.button, styles.cancelButton]}
-                  onPress={() => setModalVisible(false)}
+                  onPress={() => {
+                    setModalVisible(false);
+                    setSpotAvailable(null);
+                    setFormData({ spotNumber: '', customerName: '', plate: '', carColor: '', brand: '', photo: '' });
+                  }}
                 >
                   <Text style={styles.buttonText}>Cancelar</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
-                  style={[styles.button, styles.confirmButton]}
+                  style={[
+                    styles.button, 
+                    styles.confirmButton,
+                    (!formData.spotNumber || !formData.customerName || !formData.plate || !formData.carColor || !formData.brand || spotAvailable === false) && styles.disabledButton
+                  ]}
                   onPress={handleEntry}
+                  disabled={!formData.spotNumber || !formData.customerName || !formData.plate || !formData.carColor || !formData.brand || spotAvailable === false || loading}
                 >
-                  <Text style={styles.buttonText}>Registrar</Text>
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Registrar</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -301,6 +450,7 @@ const HomeScreen = () => {
           onClose={() => {
             setCheckoutVisible(false);
             loadData();
+            loadSpots();
           }}
         />
       </Modal>
@@ -439,6 +589,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#999',
     marginTop: 12,
+    fontSize: 16,
+  },
+  emptySubtext: {
+    textAlign: 'center',
+    color: '#ccc',
+    marginTop: 8,
+    fontSize: 12,
   },
   modalOverlay: {
     flex: 1,
@@ -468,7 +625,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fafafa',
   },
-  imageButton: {
+  inputError: {
+    borderColor: '#f44336',
+    backgroundColor: '#FFEBEE',
+  },
+  inputSuccess: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#E8F5E9',
+  },
+  checkingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  checkingText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  availableText: {
+    color: '#4CAF50',
+    fontSize: 12,
+    marginBottom: 12,
+    fontWeight: '500',
+  },
+  unavailableText: {
+    color: '#f44336',
+    fontSize: 12,
+    marginBottom: 12,
+    fontWeight: '500',
+  },
+  photoButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  photoButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -476,20 +669,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#007AFF',
     borderRadius: 8,
-    marginBottom: 12,
     backgroundColor: '#f0f7ff',
+    gap: 8,
   },
-  imageButtonText: {
-    marginLeft: 8,
+  photoButtonText: {
     color: '#007AFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
+  },
+  photoPreviewContainer: {
+    position: 'relative',
+    marginBottom: 12,
   },
   previewImage: {
     width: '100%',
     height: 200,
     borderRadius: 8,
-    marginBottom: 12,
+  },
+  removePhotoButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'white',
+    borderRadius: 12,
   },
   modalButtons: {
     flexDirection: 'row',
@@ -507,6 +709,9 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     backgroundColor: '#4CAF50',
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
   },
   buttonText: {
     color: '#fff',

@@ -1,18 +1,72 @@
 {
-  "activeParkings": [],
+  "activeParkings": [
+    {
+      "id": 1780153703451,
+      "spotNumber": 1,
+      "plate": "KJH123",
+      "customerName": "Renan",
+      "carColor": "Azul ",
+      "brand": "Uno",
+      "photo": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252Fapp-9cd75f73-6241-4169-8700-8e28fcc037a5/ImagePicker/62afd470-0cd0-4d7b-ab3a-5ac0de25546d.jpeg",
+      "entryTime": "2026-05-30T15:08:23.451Z",
+      "status": "active"
+    },
+    {
+      "id": 1780154676418,
+      "spotNumber": 2,
+      "plate": "OIU123",
+      "customerName": "Mumu",
+      "carColor": "Preto ",
+      "brand": "Chevrolet ",
+      "photo": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252Fapp-9cd75f73-6241-4169-8700-8e28fcc037a5/ImagePicker/764bece4-32d5-4ae1-912c-91634a45d6db.jpeg",
+      "entryTime": "2026-05-30T15:24:36.418Z",
+      "status": "active"
+    },
+    {
+      "id": 1780156145281,
+      "spotNumber": 10,
+      "plate": "TYU987",
+      "customerName": "Flex",
+      "carColor": "Branco ",
+      "brand": "BMW ",
+      "photo": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252Fapp-9cd75f73-6241-4169-8700-8e28fcc037a5/ImagePicker/3eee62db-a22e-4917-98bb-a52a7642f6fe.jpeg",
+      "entryTime": "2026-05-30T15:49:05.281Z",
+      "status": "active"
+    }
+  ],
   "history": [],
   "spots": [
     {
       "id": 1,
       "number": 1,
-      "isOccupied": false,
-      "currentVehicle": null
+      "isOccupied": true,
+      "currentVehicle": {
+        "id": 1780153703451,
+        "spotNumber": 1,
+        "plate": "KJH123",
+        "customerName": "Renan",
+        "carColor": "Azul ",
+        "brand": "Uno",
+        "photo": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252Fapp-9cd75f73-6241-4169-8700-8e28fcc037a5/ImagePicker/62afd470-0cd0-4d7b-ab3a-5ac0de25546d.jpeg",
+        "entryTime": "2026-05-30T15:08:23.451Z",
+        "status": "active"
+      }
     },
     {
       "id": 2,
       "number": 2,
-      "isOccupied": false,
-      "currentVehicle": null
+      "isOccupied": true,
+      "currentVehicle": {
+        "id": 1780154676418,
+        "spotNumber": 2,
+        "plate": "OIU123",
+        "customerName": "Mumu",
+        "carColor": "Preto ",
+        "brand": "Chevrolet ",
+        "photo": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252Fapp-9cd75f73-6241-4169-8700-8e28fcc037a5/ImagePicker/764bece4-32d5-4ae1-912c-91634a45d6db.jpeg",
+        "entryTime": "2026-05-30T15:24:36.418Z",
+        "status": "active"
+      }
     },
     {
       "id": 3,
@@ -59,8 +113,18 @@
     {
       "id": 10,
       "number": 10,
-      "isOccupied": false,
-      "currentVehicle": null
+      "isOccupied": true,
+      "currentVehicle": {
+        "id": 1780156145281,
+        "spotNumber": 10,
+        "plate": "TYU987",
+        "customerName": "Flex",
+        "carColor": "Branco ",
+        "brand": "BMW ",
+        "photo": "file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540anonymous%252Fapp-9cd75f73-6241-4169-8700-8e28fcc037a5/ImagePicker/3eee62db-a22e-4917-98bb-a52a7642f6fe.jpeg",
+        "entryTime": "2026-05-30T15:49:05.281Z",
+        "status": "active"
+      }
     },
     {
       "id": 11,
