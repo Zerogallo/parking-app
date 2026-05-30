@@ -79,9 +79,9 @@ const CheckoutScreen = ({ vehicle, onClose }: CheckoutScreenProps) => {
               } else {
                 Alert.alert('Erro', result.error || 'Erro ao registrar saída');
               }
-            } catch (error) {
+            } catch (error: any) {
               console.error('❌ Erro:', error);
-              Alert.alert('Erro', 'Não foi possível registrar a saída');
+              Alert.alert('Erro', error.message || 'Não foi possível registrar a saída');
             } finally {
               setLoading(false);
             }
@@ -91,7 +91,16 @@ const CheckoutScreen = ({ vehicle, onClose }: CheckoutScreenProps) => {
     );
   };
 
-  if (!vehicle) return null;
+  if (!vehicle) {
+    return (
+      <View style={styles.container}>
+        <Text>Veículo não encontrado</Text>
+        <TouchableOpacity onPress={onClose}>
+          <Text>Fechar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
