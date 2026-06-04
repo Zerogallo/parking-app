@@ -158,31 +158,36 @@ const HistoryScreen = () => {
       <View style={styles.cardHeader}>
         <View>
           <Text style={styles.plate}>{item.plate}</Text>
-          <Text style={styles.customerName}>{item.customerName}</Text>
+          <Text style={styles.customerName}><Ionicons name="person-circle-outline" size={20} color="#000" /> {item.customerName}</Text>
         </View>
-        <Text style={styles.amount}>R$ {item.amount?.toFixed(2)}</Text>
+        <Text style={styles.amount}><Ionicons name="cash-outline" size={20} color="#000" /> R$ {item.amount?.toFixed(2)}</Text>
       </View>
       
       <View style={styles.cardContent}>
-        <Text style={styles.vehicleInfo}>{item.brand} - {item.carColor}</Text>
+        <Text style={styles.vehicleInfo}><Ionicons name="pricetag-outline" size={20} color="#000" /> {item.brand} - {item.carColor}</Text>
+        <View style={styles.cadTimeInfo}>
         <Text style={styles.timeInfo}>
-          📅 Entrada: {new Date(item.entryTime).toLocaleDateString()}
+          <Ionicons name="calendar-outline" size={20} color="#000" /> Entrada: {new Date(item.entryTime).toLocaleDateString()}
         </Text>
         <Text style={styles.timeInfo}>
-          ⏰ Entrada: {new Date(item.entryTime).toLocaleTimeString()}
+          <Ionicons name="stopwatch-outline" size={20} color="#000" /> Entrada: {new Date(item.entryTime).toLocaleTimeString()}
         </Text>
+        </View>
         {item.exitTime && (
           <>
+          <View style={styles.cadTimeInfo}>
+
             <Text style={styles.timeInfo}>
-              📅 Saída: {new Date(item.exitTime).toLocaleDateString()}
+              <Ionicons name="calendar-outline" size={20} color="#000" /> Saída: {new Date(item.exitTime).toLocaleDateString()}
             </Text>
             <Text style={styles.timeInfo}>
-              ⏰ Saída: {new Date(item.exitTime).toLocaleTimeString()}
+              <Ionicons name="stopwatch-outline" size={20} color="#000" /> Saída: {new Date(item.exitTime).toLocaleTimeString()}
             </Text>
+          </View>
           </>
         )}
         {item.hoursParked && (
-          <Text style={styles.duration}>⏱️ Tempo: {item.hoursParked} horas</Text>
+          <Text style={styles.duration}><Ionicons name="stopwatch-outline" size={20} color="#000" /> Tempo: {item.hoursParked} horas</Text>
         )}
       </View>
       
@@ -339,9 +344,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   plate: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
   customerName: {
     fontSize: 14,
@@ -360,6 +369,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 6,
+  },
+  cadTimeInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 12,
+    borderRadius: 8,
+    marginBottom: 6,
+    padding: 8,
+    backgroundColor: '#f0f0f0',
   },
   timeInfo: {
     fontSize: 12,

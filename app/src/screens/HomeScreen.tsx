@@ -228,14 +228,14 @@ const HomeScreen = () => {
       }}
     >
       <View style={styles.cardHeader}>
-        <Text style={styles.spotNumber}>Vaga {item.spotNumber}</Text>
+        <Text style={styles.spotNumber}><Ionicons name="location-outline" size={20} color="#f03939" /> Vaga {item.spotNumber}</Text>
         <Text style={styles.plate}>{item.plate}</Text>
       </View>
       <View style={styles.cardContent}>
-        <Text style={styles.customerName}>{item.customerName}</Text>
-        <Text style={styles.carInfo}>{item.brand} - {item.carColor}</Text>
-        <Text style={styles.timeInfo}>Tempo: {formatTime(item.entryTime)}</Text>
-        <Text style={styles.valueInfo}>Valor: R$ {calculateCurrentValue(item.entryTime).toFixed(2)}</Text>
+        <Text style={styles.customerName}><Ionicons name="person-circle-outline" size={20} color="#000" /> {item.customerName}</Text>
+        <Text style={styles.carInfo}><Ionicons name="pricetag-outline" size={20} color="#000" /> {item.brand} - {item.carColor}</Text>
+        <Text style={styles.timeInfo}><Ionicons name="stopwatch-outline" size={20} color="#000" /> Tempo: {formatTime(item.entryTime)}</Text>
+        <Text style={styles.valueInfo}><Ionicons name="cash-outline" size={20} color="#265b11" /> Valor: R$ {calculateCurrentValue(item.entryTime).toFixed(2)}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -244,18 +244,18 @@ const HomeScreen = () => {
     <View style={styles.historyItem}>
       <View style={styles.historyInfo}>
         <Text style={styles.historyPlate}>{item.plate}</Text>
-        <Text style={styles.historyCustomer}>{item.customerName}</Text>
+        <Text style={styles.historyCustomer}><Ionicons name="person-circle-outline" size={20} color="#000" /> {item.customerName}</Text>
         <Text style={styles.historyTime}>
-          Entrada: {new Date(item.entryTime).toLocaleString()}
+          <Ionicons name="enter-outline" size={20} color="#000" /> Entrada: {new Date(item.entryTime).toLocaleString()}
         </Text>
         {item.exitTime && (
           <Text style={styles.historyTime}>
-            Saída: {new Date(item.exitTime).toLocaleString()}
+            <Ionicons name="exit-outline" size={20} color="#000" /> Saída: {new Date(item.exitTime).toLocaleString()}
           </Text>
         )}
       </View>
       <Text style={styles.historyValue}>
-        R$ {item.amount?.toFixed(2) || calculateCurrentValue(item.entryTime).toFixed(2)}
+        <Ionicons name="cash-outline" size={20} color="#000" /> R$ {item.amount?.toFixed(2) || calculateCurrentValue(item.entryTime).toFixed(2)}
       </Text>
     </View>
   );
@@ -268,7 +268,7 @@ const HomeScreen = () => {
         }
       >
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🚗 Estacionados Agora ({activeParkings.length})</Text>
+          <Text style={styles.sectionTitle}><Ionicons name="car-sport-outline" size={20} color="#000" /> Estacionados Agora ({activeParkings.length})</Text>
           {activeParkings.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="car-outline" size={60} color="#ccc" />
@@ -287,7 +287,7 @@ const HomeScreen = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📋 Últimas Movimentações</Text>
+          <Text style={styles.sectionTitle}><Ionicons name="git-compare-outline" size={20} color="#000" /> Últimas Movimentações</Text>
           {recentHistory.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum histórico recente</Text>
           ) : (

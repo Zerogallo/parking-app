@@ -38,6 +38,7 @@ const ParkingMapScreen = () => {
 
   const renderSpot = (spot: ParkingSpot) => {
     const isOccupied = spot.isOccupied;
+    const vehicle = spot.currentVehicle;
     
     return (
       <TouchableOpacity
@@ -53,8 +54,11 @@ const ParkingMapScreen = () => {
       >
         {isOccupied ? (
           <>
-            <Ionicons name="car" size={32} color="#fff" />
+            <Ionicons name="car" size={28} color="#fff" />
             <Text style={styles.spotNumber}>{spot.number}</Text>
+            <Text style={styles.plateText} numberOfLines={1}>
+              {vehicle?.plate || '---'}
+            </Text>
           </>
         ) : (
           <>
@@ -62,6 +66,7 @@ const ParkingMapScreen = () => {
             <Text style={[styles.spotNumber, styles.freeSpotNumber]}>
               {spot.number}
             </Text>
+            <Text style={styles.freeText}>Livre</Text>
           </>
         )}
       </TouchableOpacity>
@@ -239,14 +244,31 @@ const styles = StyleSheet.create({
   },
   occupiedSpot: {
     backgroundColor: '#f44336',
+    padding: 4,
   },
   spotNumber: {
     fontSize: 12,
     marginTop: 4,
     fontWeight: 'bold',
+    color: '#fff',
   },
   freeSpotNumber: {
     color: '#4CAF50',
+  },
+  plateText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: 'bold',
+    marginTop: 2,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  freeText: {
+    fontSize: 10,
+    color: '#4CAF50',
+    marginTop: 2,
   },
   modalContainer: {
     flex: 1,
